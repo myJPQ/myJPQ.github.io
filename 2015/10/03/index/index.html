@@ -89,7 +89,7 @@
     </p>
   <p class="article-time">
     <time datetime="2015-10-03T04:05:29.000Z" itemprop="datePublished">2015-10-03</time>
-    更新日期:<time datetime="2015-10-03T04:11:29.000Z" itemprop="dateModified">2015-10-03</time>
+    更新日期:<time datetime="2015-10-03T04:17:59.000Z" itemprop="dateModified">2015-10-03</time>
     
   </p>
 </header>
@@ -189,8 +189,25 @@
     }
 }
 </code></pre><p>}</p>
-<p>###IndexScroller<br>    public class IndexScroller {<br>    private float mIndexbarWidth; // 索引条宽度<br>    private float mIndexbarMargin; // 索引条外边距<br>    private float mPreviewPadding; //<br>    private float mDensity; // 密度<br>    private float mScaledDensity; // 缩放/密度<br>    private float mAlphaRate; // 透明度<br>    private int mState = STATE_HIDDEN; // 状态<br>    private int mListViewWidth; // ListView宽度<br>    private int mListViewHeight; // ListView高度<br>    private int mCurrentSection = -1; // 当前部分<br>    private boolean mIsIndexing = false; // 是否正在索引<br>    private ListView mListView = null;<br>    private SectionIndexer mIndexer = null;<br>    private String[] mSections = null;<br>    private RectF mIndexbarRect;</p>
-<pre><code><span class="comment">// 4种状态（已隐藏、正在显示、已显示、正在隐藏）</span>
+<p>###IndexScroller</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IndexScroller</span> </span>{
+<span class="keyword">private</span> <span class="keyword">float</span> mIndexbarWidth; <span class="comment">// 索引条宽度</span>
+<span class="keyword">private</span> <span class="keyword">float</span> mIndexbarMargin; <span class="comment">// 索引条外边距</span>
+<span class="keyword">private</span> <span class="keyword">float</span> mPreviewPadding; <span class="comment">//</span>
+<span class="keyword">private</span> <span class="keyword">float</span> mDensity; <span class="comment">// 密度</span>
+<span class="keyword">private</span> <span class="keyword">float</span> mScaledDensity; <span class="comment">// 缩放/密度</span>
+<span class="keyword">private</span> <span class="keyword">float</span> mAlphaRate; <span class="comment">// 透明度</span>
+<span class="keyword">private</span> <span class="keyword">int</span> mState = STATE_HIDDEN; <span class="comment">// 状态</span>
+<span class="keyword">private</span> <span class="keyword">int</span> mListViewWidth; <span class="comment">// ListView宽度</span>
+<span class="keyword">private</span> <span class="keyword">int</span> mListViewHeight; <span class="comment">// ListView高度</span>
+<span class="keyword">private</span> <span class="keyword">int</span> mCurrentSection = -<span class="number">1</span>; <span class="comment">// 当前部分</span>
+<span class="keyword">private</span> <span class="keyword">boolean</span> mIsIndexing = <span class="keyword">false</span>; <span class="comment">// 是否正在索引</span>
+<span class="keyword">private</span> ListView mListView = <span class="keyword">null</span>;
+<span class="keyword">private</span> SectionIndexer mIndexer = <span class="keyword">null</span>;
+<span class="keyword">private</span> String[] mSections = <span class="keyword">null</span>;
+<span class="keyword">private</span> RectF mIndexbarRect;
+
+<span class="comment">// 4种状态（已隐藏、正在显示、已显示、正在隐藏）</span>
 <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_HIDDEN = <span class="number">0</span>;
 <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_SHOWING = <span class="number">1</span>;
 <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_SHOWN = <span class="number">2</span>;
@@ -445,17 +462,22 @@
     }
 
 };
-</code></pre><p>}</p>
-<p>###citylist.xml<br>    <linearlayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"><br>    &lt;com.example.administrator.gte.newview.IndexableListView<br>        android:id=”@id/city_list”<br>        android:layout_width=”match_parent”<br>        android:layout_height=”match_parent”</linearlayout></p>
-<pre><code>    &gt;
+}
+</code></pre><p>###citylistlayout.xml</p>
+<pre><code><span class="pi">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
+<span class="tag">&lt;<span class="title">LinearLayout</span> <span class="attribute">xmlns:android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
+<span class="attribute">android:orientation</span>=<span class="value">"vertical"</span> <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span>
+<span class="attribute">android:layout_height</span>=<span class="value">"match_parent"</span>&gt;</span>
+<span class="tag">&lt;<span class="title">com.example.administrator.gte.newview.IndexableListView</span>
+    <span class="attribute">android:id</span>=<span class="value">"@id/city_list"</span>
+    <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span>
+    <span class="attribute">android:layout_height</span>=<span class="value">"match_parent"</span>
 
-&lt;/com<span class="class">.example</span><span class="class">.administrator</span><span class="class">.gte</span><span class="class">.newview</span><span class="class">.IndexableListView</span>&gt;
+    &gt;</span>
 
-
-
-
-&lt;/LinearLayout&gt;
-</code></pre><p>###city_item.xml</p>
+<span class="tag">&lt;/<span class="title">com.example.administrator.gte.newview.IndexableListView</span>&gt;</span>
+</code></pre><p></p>
+<p>###city_item.xml</p>
 <pre><code><span class="pi">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
 <span class="tag">&lt;<span class="title">LinearLayout</span> <span class="attribute">xmlns:android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
 <span class="attribute">android:orientation</span>=<span class="value">"vertical"</span> <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span>
