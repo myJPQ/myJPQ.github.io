@@ -1,0 +1,965 @@
+
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="http://tajs.qq.com/stats?sId=44218032" charset="UTF-8"></script>
+  <script>
+	var _hmt = _hmt || [];
+	(function() {
+	  var hm = document.createElement("script");
+	  hm.src = "//hm.baidu.com/hm.js?ecd7d602696d6892e8421e78a6f28a9e";
+	  var s = document.getElementsByTagName("script")[0]; 
+	  s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+  
+  <title>实现ListView A~Z快速索引城市 | Q_JP大鹏</title>
+  <meta name="author" content="仇剑鹏">
+  
+  <meta name="description" content="大鹏的blog｜android｜java">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="实现ListView A~Z快速索引城市"/>
+  <meta property="og:site_name" content="Q_JP大鹏"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/imgs/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="Q_JP大鹏" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="//libs.baidu.com/jquery/1.8.0/jquery.min.js"></script>
+</head>
+
+
+<body>
+  <header><div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/imgs/logo.png" alt="Q_JP大鹏" title="Q_JP大鹏"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name">Q_JP大鹏</h1>
+				<h2 class="blog-motto">只想安安静静的敲代码</h2>
+			</div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li> <a href="/atom.xml">RSS</a> </li>
+				</ul>
+			</nav>			
+</div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header class="article-info clearfix">
+  <h1 itemprop="name">
+	实现ListView A~Z快速索引城市
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://yoursite.com" title="仇剑鹏">仇剑鹏</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2015-10-03T04:05:29.000Z" itemprop="datePublished">2015-10-03</time>
+    更新日期:<time datetime="2015-10-03T04:07:41.000Z" itemprop="dateModified">2015-10-03</time>
+    
+  </p>
+</header>
+    <div class="entry">
+		
+        <p>实现步骤：</p>
+<ul>
+<li>1.封装好 IndexableListView和IndexScroller</li>
+</ul>
+<p>2.在布局文件中加入这个自定义的IndexableListView，和item布局<br>I<br>3.实现StringMatcher类用于比较索引和item</p>
+<p>4.实现适配器CityListAdapter</p>
+<p>5.实现citylist_Acitivity</p>
+<hr>
+<p>代码如下：<br>-</p>
+<p>###IndexableListView<br>    public class IndexableListView extends ListView {</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">boolean</span> mIsfastScrollEnabled = <span class="keyword">false</span>;
+<span class="keyword">private</span> IndexScroller mScroller = <span class="keyword">null</span>;
+<span class="keyword">private</span> GestureDetector gestureDetector = <span class="keyword">null</span>;
+
+<span class="function"><span class="keyword">public</span> <span class="title">IndexableListView</span><span class="params">(Context context)</span> </span>{
+    <span class="keyword">super</span>(context);
+}
+
+<span class="function"><span class="keyword">public</span> <span class="title">IndexableListView</span><span class="params">(Context context, AttributeSet attrs)</span> </span>{
+    <span class="keyword">super</span>(context, attrs);
+}
+
+<span class="function"><span class="keyword">public</span> <span class="title">IndexableListView</span><span class="params">(Context context, AttributeSet attrs, <span class="keyword">int</span> defStyleAttr)</span> </span>{
+    <span class="keyword">super</span>(context, attrs, defStyleAttr);
+}
+
+<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">isFastScrollEnable</span><span class="params">()</span> </span>{
+    <span class="keyword">return</span> mIsfastScrollEnabled;
+}
+
+<span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">setFastScrollEnabled</span><span class="params">(<span class="keyword">boolean</span> enabled)</span> </span>{
+    mIsfastScrollEnabled = <span class="keyword">true</span>;
+    <span class="keyword">if</span> (mIsfastScrollEnabled) {
+        <span class="keyword">if</span> (mScroller == <span class="keyword">null</span>) {
+            mScroller = <span class="keyword">new</span> IndexScroller(getContext(), <span class="keyword">this</span>);
+
+        } <span class="keyword">else</span> {
+            <span class="keyword">if</span> (mScroller != <span class="keyword">null</span>) {
+                mScroller.hide();
+            }
+        }
+    }
+
+}
+
+<span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">draw</span><span class="params">(Canvas canvas)</span> </span>{
+    <span class="keyword">super</span>.draw(canvas);
+    <span class="keyword">if</span> (mScroller != <span class="keyword">null</span>) {
+        mScroller.draw(canvas);
+    }
+}
+
+<span class="annotation">@Override</span>
+<span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">onTouchEvent</span><span class="params">(MotionEvent ev)</span> </span>{
+    <span class="keyword">if</span> (mScroller != <span class="keyword">null</span> &amp;&amp; mScroller.onTouchEvent(ev)) {
+        <span class="keyword">return</span> <span class="keyword">true</span>;
+    }
+    <span class="keyword">if</span> (gestureDetector == <span class="keyword">null</span>) {
+        gestureDetector = <span class="keyword">new</span> GestureDetector(getContext(), <span class="keyword">new</span>
+                GestureDetector.SimpleOnGestureListener() {
+                    <span class="annotation">@Override</span>
+                    <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">onFling</span><span class="params">(MotionEvent e1,
+                                           MotionEvent e2,
+                                           <span class="keyword">float</span> velocityX,
+                                           <span class="keyword">float</span> velocityY)</span> </span>{
+                        mScroller.show();
+                        <span class="function"><span class="keyword">return</span> <span class="keyword">super</span>.<span class="title">onFling</span><span class="params">(e1, e2, velocityX, velocityY)</span></span>;
+                    }
+                });
+    }
+    gestureDetector.onTouchEvent(ev);
+    <span class="function"><span class="keyword">return</span> <span class="keyword">super</span>.<span class="title">onTouchEvent</span><span class="params">(ev)</span></span>;
+}
+
+<span class="keyword">public</span>  <span class="function"><span class="keyword">void</span> <span class="title">setAdapter</span><span class="params">(ListAdapter adapter)</span></span>{
+
+    <span class="keyword">super</span>.setAdapter(adapter);
+    <span class="keyword">if</span>(mScroller!=<span class="keyword">null</span>){
+        mScroller.setAdapter(adapter);
+    }
+
+}
+
+<span class="keyword">protected</span>  <span class="function"><span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w,<span class="keyword">int</span> h,<span class="keyword">int</span> oldw,<span class="keyword">int</span> oldh)</span></span>{
+
+    <span class="keyword">super</span>.onSizeChanged(w,h,oldw,oldh);
+    <span class="keyword">if</span>(mScroller!=<span class="keyword">null</span>)  {
+        mScroller.onSizeChanged(w,h,oldw,oldh);
+
+    }
+}
+</code></pre><p>}</p>
+<p>###IndexScroller<br>    public class IndexScroller {<br>    private float mIndexbarWidth; // 索引条宽度<br>    private float mIndexbarMargin; // 索引条外边距<br>    private float mPreviewPadding; //<br>    private float mDensity; // 密度<br>    private float mScaledDensity; // 缩放/密度<br>    private float mAlphaRate; // 透明度<br>    private int mState = STATE_HIDDEN; // 状态<br>    private int mListViewWidth; // ListView宽度<br>    private int mListViewHeight; // ListView高度<br>    private int mCurrentSection = -1; // 当前部分<br>    private boolean mIsIndexing = false; // 是否正在索引<br>    private ListView mListView = null;<br>    private SectionIndexer mIndexer = null;<br>    private String[] mSections = null;<br>    private RectF mIndexbarRect;</p>
+<pre><code><span class="comment">// 4种状态（已隐藏、正在显示、已显示、正在隐藏）</span>
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_HIDDEN = <span class="number">0</span>;
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_SHOWING = <span class="number">1</span>;
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_SHOWN = <span class="number">2</span>;
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> STATE_HIDING = <span class="number">3</span>;
+
+<span class="function"><span class="keyword">public</span> <span class="title">IndexScroller</span><span class="params">(Context context, ListView lv)</span> </span>{
+    mDensity = context.getResources().getDisplayMetrics().density;
+    mScaledDensity = context.getResources().getDisplayMetrics().scaledDensity;
+    mListView = lv;
+    setAdapter(mListView.getAdapter());
+
+    mIndexbarWidth = <span class="number">40</span> * mDensity; <span class="comment">// 索引条宽度</span>
+    mIndexbarMargin = <span class="number">0</span>* mDensity;<span class="comment">// 索引条间距</span>
+    mPreviewPadding = <span class="number">5</span> * mDensity; <span class="comment">// 内边距</span>
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">draw</span><span class="params">(Canvas canvas)</span> </span>{
+    <span class="keyword">if</span> (mState == STATE_HIDDEN)
+        <span class="keyword">return</span>;
+
+    <span class="comment">// mAlphaRate determines the rate of opacity</span>
+    Paint indexbarPaint = <span class="keyword">new</span> Paint();
+    indexbarPaint.setColor(Color.BLACK);
+    indexbarPaint.setAlpha((<span class="keyword">int</span>) (<span class="number">64</span> * mAlphaRate));
+    indexbarPaint.setAntiAlias(<span class="keyword">true</span>);
+    <span class="comment">// 画右侧字母索引的圆矩形</span>
+    canvas.drawRoundRect(mIndexbarRect, <span class="number">5</span> * mDensity, <span class="number">5</span> * mDensity,
+            indexbarPaint);
+
+    <span class="keyword">if</span> (mSections != <span class="keyword">null</span> &amp;&amp; mSections.length &gt; <span class="number">0</span>) {
+        <span class="comment">// Preview is shown when mCurrentSection is set</span>
+        <span class="keyword">if</span> (mCurrentSection &gt;= <span class="number">0</span>) {
+            Paint previewPaint = <span class="keyword">new</span> Paint(); <span class="comment">// 用来绘画所以条背景的画笔</span>
+            previewPaint.setColor(Color.BLACK);<span class="comment">// 设置画笔颜色为黑色</span>
+            previewPaint.setAlpha(<span class="number">96</span>); <span class="comment">// 设置透明度</span>
+            previewPaint.setAntiAlias(<span class="keyword">true</span>);<span class="comment">// 设置抗锯齿</span>
+            previewPaint.setShadowLayer(<span class="number">3</span>, <span class="number">0</span>, <span class="number">0</span>, Color.argb(<span class="number">64</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>)); <span class="comment">// 设置阴影层</span>
+
+            Paint previewTextPaint = <span class="keyword">new</span> Paint(); <span class="comment">// 用来绘画索引字母的画笔</span>
+            previewTextPaint.setColor(Color.WHITE); <span class="comment">// 设置画笔为白色</span>
+            previewTextPaint.setAntiAlias(<span class="keyword">true</span>); <span class="comment">// 设置抗锯齿</span>
+            previewTextPaint.setTextSize(<span class="number">50</span> * mScaledDensity); <span class="comment">// 设置字体大小</span>
+
+            <span class="comment">// 文本的宽度</span>
+            <span class="keyword">float</span> previewTextWidth = previewTextPaint
+                    .measureText(mSections[mCurrentSection]);
+
+            <span class="keyword">float</span> previewSize = <span class="number">2</span> * mPreviewPadding
+                    + previewTextPaint.descent()
+                    - previewTextPaint.ascent();
+            RectF previewRect = <span class="keyword">new</span> RectF(
+                    (mListViewWidth - previewSize) / <span class="number">2</span>,
+                    (mListViewHeight - previewSize) / <span class="number">2</span>,
+                    (mListViewWidth - previewSize) / <span class="number">2</span> + previewSize,
+                    (mListViewHeight - previewSize) / <span class="number">2</span> + previewSize);
+
+            <span class="comment">// 中间索引的那个框</span>
+            canvas.drawRoundRect(previewRect, <span class="number">5</span> * mDensity, <span class="number">5</span> * mDensity,
+                    previewPaint);
+            <span class="comment">// 绘画索引字母</span>
+            canvas.drawText(
+                    mSections[mCurrentSection],
+                    previewRect.left + (previewSize - previewTextWidth) / <span class="number">2</span>
+                            - <span class="number">1</span>,
+                    previewRect.top + mPreviewPadding
+                            - previewTextPaint.ascent() + <span class="number">1</span>,
+                    previewTextPaint);
+        }
+
+        <span class="comment">// 绘画右侧索引条的字母</span>
+        Paint indexPaint = <span class="keyword">new</span> Paint();
+        indexPaint.setColor(Color.WHITE);
+        indexPaint.setAlpha((<span class="keyword">int</span>) (<span class="number">255</span> * mAlphaRate));
+        indexPaint.setAntiAlias(<span class="keyword">true</span>);
+        indexPaint.setTextSize(<span class="number">12</span> * mScaledDensity);
+
+        <span class="keyword">float</span> sectionHeight = (mIndexbarRect.height() - <span class="number">2</span> * mIndexbarMargin)
+                / mSections.length;
+        <span class="keyword">float</span> paddingTop = (sectionHeight - (indexPaint.descent() - indexPaint
+                .ascent())) / <span class="number">2</span>;
+        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; mSections.length; i++) {
+            <span class="keyword">float</span> paddingLeft = (mIndexbarWidth - indexPaint
+                    .measureText(mSections[i])) / <span class="number">2</span>;
+            canvas.drawText(mSections[i], mIndexbarRect.left + paddingLeft,
+                    mIndexbarRect.top + mIndexbarMargin + sectionHeight * i
+                            + paddingTop - indexPaint.ascent(), indexPaint);
+        }
+    }
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onTouchEvent</span><span class="params">(MotionEvent ev)</span> </span>{
+    <span class="keyword">switch</span> (ev.getAction()) {
+        <span class="keyword">case</span> MotionEvent.ACTION_DOWN: <span class="comment">// 按下，开始索引</span>
+            <span class="comment">// If down event occurs inside index bar region, start indexing</span>
+            <span class="keyword">if</span> (mState != STATE_HIDDEN &amp;&amp; contains(ev.getX(), ev.getY())) {
+                setState(STATE_SHOWN);
+
+                <span class="comment">// It demonstrates that the motion event started from index bar</span>
+                mIsIndexing = <span class="keyword">true</span>;
+                <span class="comment">// Determine which section the point is in, and move the list to</span>
+                <span class="comment">// that section</span>
+                mCurrentSection = getSectionByPoint(ev.getY());
+                mListView.setSelection(mIndexer
+                        .getPositionForSection(mCurrentSection));
+                <span class="keyword">return</span> <span class="keyword">true</span>;
+            }
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> MotionEvent.ACTION_MOVE: <span class="comment">// 移动</span>
+            <span class="keyword">if</span> (mIsIndexing) {
+                <span class="comment">// If this event moves inside index bar</span>
+                <span class="keyword">if</span> (contains(ev.getX(), ev.getY())) {
+                    <span class="comment">// Determine which section the point is in, and move the</span>
+                    <span class="comment">// list to that section</span>
+                    mCurrentSection = getSectionByPoint(ev.getY());
+                    mListView.setSelection(mIndexer
+                            .getPositionForSection(mCurrentSection));
+                }
+                <span class="keyword">return</span> <span class="keyword">true</span>;
+            }
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> MotionEvent.ACTION_UP: <span class="comment">// 抬起</span>
+            <span class="keyword">if</span> (mIsIndexing) {
+                mIsIndexing = <span class="keyword">false</span>;
+                mCurrentSection = -<span class="number">1</span>;
+            }
+            <span class="keyword">if</span> (mState == STATE_SHOWN)
+                setState(STATE_HIDING);
+            <span class="keyword">break</span>;
+    }
+    <span class="keyword">return</span> <span class="keyword">false</span>;
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSizeChanged</span><span class="params">(<span class="keyword">int</span> w, <span class="keyword">int</span> h, <span class="keyword">int</span> oldw, <span class="keyword">int</span> oldh)</span> </span>{
+    mListViewWidth = w;
+    mListViewHeight = h;
+    mIndexbarRect = <span class="keyword">new</span> RectF(w - mIndexbarMargin - mIndexbarWidth,
+            mIndexbarMargin, w - mIndexbarMargin, h - mIndexbarMargin);
+}
+
+<span class="comment">// 显示</span>
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">show</span><span class="params">()</span> </span>{
+    <span class="keyword">if</span> (mState == STATE_HIDDEN)
+        setState(STATE_SHOWING);
+    <span class="keyword">else</span> <span class="keyword">if</span> (mState == STATE_HIDING)
+        setState(STATE_HIDING);
+}
+
+<span class="comment">// 隐藏</span>
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">hide</span><span class="params">()</span> </span>{
+    <span class="keyword">if</span> (mState == STATE_SHOWN)
+        setState(STATE_HIDING);
+}
+
+<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAdapter</span><span class="params">(Adapter adapter)</span> </span>{
+    <span class="keyword">if</span> (adapter <span class="keyword">instanceof</span> SectionIndexer) {
+        mIndexer = (SectionIndexer) adapter;
+        mSections = (String[]) mIndexer.getSections();
+    }
+}
+
+<span class="comment">// 设置状态</span>
+<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setState</span><span class="params">(<span class="keyword">int</span> state)</span> </span>{
+    <span class="keyword">if</span> (state &lt; STATE_HIDDEN || state &gt; STATE_HIDING)
+        <span class="keyword">return</span>;
+
+    mState = state;
+    <span class="keyword">switch</span> (mState) {
+        <span class="keyword">case</span> STATE_HIDDEN:
+            <span class="comment">// Cancel any fade effect</span>
+            <span class="comment">// 取消渐退的效果</span>
+            mHandler.removeMessages(<span class="number">0</span>);
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> STATE_SHOWING:
+            <span class="comment">// Start to fade in</span>
+            <span class="comment">// 开始渐进效果</span>
+            mAlphaRate = <span class="number">0</span>;
+            fade(<span class="number">0</span>);
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> STATE_SHOWN:
+            <span class="comment">// Cancel any fade effect</span>
+            <span class="comment">// 取消渐退的效果</span>
+            mHandler.removeMessages(<span class="number">0</span>);
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> STATE_HIDING:
+            <span class="comment">// Start to fade out after three seconds</span>
+            <span class="comment">// 隐藏3秒钟</span>
+            mAlphaRate = <span class="number">1</span>;
+            fade(<span class="number">3000</span>);
+            <span class="keyword">break</span>;
+    }
+}
+
+<span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">contains</span><span class="params">(<span class="keyword">float</span> x, <span class="keyword">float</span> y)</span> </span>{
+    <span class="comment">// Determine if the point is in index bar region, which includes the</span>
+    <span class="comment">// right margin of the bar</span>
+    <span class="keyword">return</span> (x &gt;= mIndexbarRect.left &amp;&amp; y &gt;= mIndexbarRect.top &amp;&amp; y &lt;= mIndexbarRect.top
+            + mIndexbarRect.height());
+}
+
+<span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">getSectionByPoint</span><span class="params">(<span class="keyword">float</span> y)</span> </span>{
+    <span class="keyword">if</span> (mSections == <span class="keyword">null</span> || mSections.length == <span class="number">0</span>)
+        <span class="keyword">return</span> <span class="number">0</span>;
+    <span class="keyword">if</span> (y &lt; mIndexbarRect.top + mIndexbarMargin)
+        <span class="keyword">return</span> <span class="number">0</span>;
+    <span class="keyword">if</span> (y &gt;= mIndexbarRect.top + mIndexbarRect.height() - mIndexbarMargin)
+        <span class="keyword">return</span> mSections.length - <span class="number">1</span>;
+    <span class="keyword">return</span> (<span class="keyword">int</span>) ((y - mIndexbarRect.top - mIndexbarMargin) / ((mIndexbarRect
+            .height() - <span class="number">2</span> * mIndexbarMargin) / mSections.length));
+}
+
+<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">fade</span><span class="params">(<span class="keyword">long</span> delay)</span> </span>{
+    mHandler.removeMessages(<span class="number">0</span>);
+    mHandler.sendEmptyMessageAtTime(<span class="number">0</span>, SystemClock.uptimeMillis() + delay);
+}
+
+<span class="keyword">private</span> Handler mHandler = <span class="keyword">new</span> Handler() {
+
+    <span class="annotation">@Override</span>
+    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleMessage</span><span class="params">(Message msg)</span> </span>{
+        <span class="keyword">super</span>.handleMessage(msg);
+
+        <span class="keyword">switch</span> (mState) {
+            <span class="keyword">case</span> STATE_SHOWING:
+                <span class="comment">// Fade in effect</span>
+                <span class="comment">// 淡进效果</span>
+                mAlphaRate += (<span class="number">1</span> - mAlphaRate) * <span class="number">0.2</span>;
+                <span class="keyword">if</span> (mAlphaRate &gt; <span class="number">0.9</span>) {
+                    mAlphaRate = <span class="number">1</span>;
+                    setState(STATE_SHOWN);
+                }
+
+                mListView.invalidate();
+                fade(<span class="number">10</span>);
+                <span class="keyword">break</span>;
+            <span class="keyword">case</span> STATE_SHOWN:
+                <span class="comment">// If no action, hide automatically</span>
+                setState(STATE_HIDING);
+                <span class="keyword">break</span>;
+            <span class="keyword">case</span> STATE_HIDING:
+                <span class="comment">// Fade out effect</span>
+                <span class="comment">// 淡出效果</span>
+                mAlphaRate -= mAlphaRate * <span class="number">0.2</span>;
+                <span class="keyword">if</span> (mAlphaRate &lt; <span class="number">0.1</span>) {
+                    mAlphaRate = <span class="number">0</span>;
+                    setState(STATE_HIDDEN);
+                }
+
+                mListView.invalidate();
+                fade(<span class="number">10</span>);
+                <span class="keyword">break</span>;
+        }
+    }
+
+};
+</code></pre><p>}</p>
+<p>###citylist.xml<br>    <linearlayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:layout_width="match_parent" android:layout_height="match_parent"><br>    &lt;com.example.administrator.gte.newview.IndexableListView<br>        android:id=”@id/city_list”<br>        android:layout_width=”match_parent”<br>        android:layout_height=”match_parent”</linearlayout></p>
+<pre><code>    &gt;
+
+&lt;/com<span class="class">.example</span><span class="class">.administrator</span><span class="class">.gte</span><span class="class">.newview</span><span class="class">.IndexableListView</span>&gt;
+
+
+
+
+&lt;/LinearLayout&gt;
+</code></pre><p>###city_item.xml</p>
+<pre><code><span class="pi">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
+<span class="tag">&lt;<span class="title">LinearLayout</span> <span class="attribute">xmlns:android</span>=<span class="value">"http://schemas.android.com/apk/res/android"</span>
+<span class="attribute">android:orientation</span>=<span class="value">"vertical"</span> <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span>
+<span class="attribute">android:layout_height</span>=<span class="value">"match_parent"</span>&gt;</span>
+<span class="tag">&lt;<span class="title">TextView</span>
+    <span class="attribute">android:id</span>=<span class="value">"@id/city_name"</span>
+    <span class="attribute">android:layout_width</span>=<span class="value">"match_parent"</span>
+    <span class="attribute">android:layout_height</span>=<span class="value">"30dp"</span>
+    <span class="attribute">android:background</span>=<span class="value">"#BFBFBF"</span>
+    <span class="attribute">android:textColor</span>=<span class="value">"#000000"</span>/&gt;</span>
+
+<span class="tag">&lt;/<span class="title">LinearLayout</span>&gt;</span>
+</code></pre><p>###城市名的资源文件</p>
+<pre><code><span class="xml"><span class="pi">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span>
+ <span class="tag">&lt;<span class="title">resources</span>&gt;</span>
+<span class="tag">&lt;
+&lt;<span class="attribute">string-array</span> <span class="attribute">name</span>=<span class="value">"city_description_list"</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>热门<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>北京首都<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>上海虹桥<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>上海浦东<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>广州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>深圳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>香港<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>澳门<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>天津<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>成都<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>重庆<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>南京<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>青岛<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>珠海<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>福州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>哈尔滨<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>大连<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>海口<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>沈阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>厦门<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>A<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>安庆<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>鞍山<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>阿克苏<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>阿勒泰<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>安康<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>B<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>北京首都<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>北京南苑<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>保山<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>包头<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>北海<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>蚌埠<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>C<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>重庆<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>成都<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>长沙<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>长春<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>常德<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>长治<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>常州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>朝阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>赤峰<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>D<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>大连<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>敦煌<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>大理<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>达县<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>东营<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>丹东<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>大同<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>E<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>恩施<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>F<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>福州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>阜阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>富蕴<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>G<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>广州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>桂林<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>贵阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>格尔木<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>广汉<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>赣州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>H<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>海口<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>哈尔滨<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>杭州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>合肥<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>黄山<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>呼和浩特<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>海拉尔<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>哈密<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>汉中<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>黑河<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>衡阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>和田<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>黄岩<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>J<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>吉林<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>济南<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>九江<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>九寨黄龙<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>吉安<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>佳木斯<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>嘉峪关<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>济宁<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>景德镇<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>景洪<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>晋江<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>锦州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>酒泉<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>K<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>昆明<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>克拉玛依<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>喀什<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>库尔勒<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>库车<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>L<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>洛阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>兰州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>拉萨<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>连云港<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>丽江<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>临沂<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>柳州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>泸州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>M<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>芒市<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>梅县<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>绵阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>牡丹江<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>满洲里<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>N<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>南京<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>宁波<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>南昌<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>南宁<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>南通<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>南充<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>南阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>Q<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>青岛<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>秦皇岛<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>齐齐哈尔<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>泉州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>衢州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>且末<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>庆阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>S<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>沈阳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>深圳<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>上海虹桥<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>上海浦东<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>汕头<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>石家庄<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>苏州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>三亚<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>沙市<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>思茅<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>T<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>天津<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>塔城<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>太原<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>通化<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>通辽<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>铜仁<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>W<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>温州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>武汉<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>武汉王家<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>无锡<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>乌鲁木齐<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>威海<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>梧州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>万县<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>潍坊<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>乌兰浩特<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>武夷山<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>X<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>厦门<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>徐州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>西安<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>西宁<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>西昌<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>襄樊<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>锡林浩特<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>Y<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>银川<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>延安<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>延吉<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>烟台<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>盐城<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>宜宾<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>宜昌<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>伊宁<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>义乌<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>永州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>榆林<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>扬州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>Z<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>珠海<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>昭通<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>张家界<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>湛江<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>芷江<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>中甸<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>舟山<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>遵义<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">item</span>&gt;</span>郑州<span class="tag">&lt;/<span class="title">item</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">string-array</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">resources</span>&gt;</span></span>
+</code></pre><p> ###CityListAdapter</p>
+<pre><code>public <span class="class"><span class="keyword">class</span> <span class="title">CityListAdapter</span> <span class="keyword">extends</span> <span class="title">ArrayAdapter</span>&lt;<span class="title">City</span>&gt; <span class="keyword">implements</span> <span class="title">SectionIndexer</span> </span>{
+private <span class="built_in">int</span> resourceId;
+private <span class="built_in">String</span> mSections = <span class="string">"#ABCDEFGHIJKLMNOPQRSTUVWXYZ"</span>;
+
+<span class="annotation">@Override</span>
+public <span class="built_in">Object</span>[] getSections() {
+    <span class="built_in">String</span>[] sections = <span class="keyword">new</span> <span class="built_in">String</span>[mSections.length()];
+    <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; mSections.length(); i++) {
+        sections[i] = <span class="built_in">String</span>.valueOf(mSections.charAt(i));
+    }
+    <span class="keyword">return</span> sections;
+}
+
+<span class="annotation">@Override</span><span class="comment">//sectionIndex为索引的字母位置</span>
+public <span class="built_in">int</span> getPositionForSection(<span class="built_in">int</span> sectionIndex) {
+    <span class="comment">//如果没有与当前索引匹配的item，则往前匹配</span>
+    <span class="keyword">for</span> (<span class="built_in">int</span> i = sectionIndex; i &gt;= <span class="number">0</span>; i--) {
+        <span class="keyword">for</span> (<span class="built_in">int</span> j = <span class="number">0</span>; j &lt; getCount(); j++) {
+            <span class="comment">//查询数字</span>
+            <span class="keyword">if</span> (i == <span class="number">0</span>) {
+                <span class="keyword">for</span> (<span class="built_in">int</span> k = <span class="number">0</span>; k &lt;= <span class="number">9</span>; k++) {
+                    <span class="keyword">if</span> (StringMatcher.match(<span class="built_in">String</span>.valueOf(<span class="built_in">String</span>.valueOf(getItem(j).getName().
+                            charAt(<span class="number">0</span>))), <span class="built_in">String</span>.valueOf(k))) ;
+                    {
+                        <span class="keyword">return</span> j;
+                    }
+                }
+            } <span class="keyword">else</span> {<span class="comment">//查询字母</span>
+
+                <span class="keyword">if</span> (StringMatcher.match(<span class="built_in">String</span>.valueOf(<span class="built_in">String</span>.valueOf(getItem(j).getName().
+                        charAt(<span class="number">0</span>))), <span class="built_in">String</span>.valueOf(mSections.charAt(i)))) {
+
+                    <span class="keyword">return</span> j;
+
+                }
+
+            }
+        }
+    }
+    <span class="keyword">return</span> <span class="number">0</span>;
+}
+
+<span class="annotation">@Override</span>
+public <span class="built_in">int</span> getSectionForPosition(<span class="built_in">int</span> position) {
+    <span class="keyword">return</span> <span class="number">0</span>;
+}
+
+public CityListAdapter(Context context, <span class="built_in">int</span> textViewResourceId, <span class="built_in">List</span>&lt;City&gt; objects) {
+    <span class="keyword">super</span>(context, textViewResourceId, objects);
+    resourceId = textViewResourceId;
+}
+
+<span class="annotation">@Override</span>
+public View getView(<span class="built_in">int</span> position, View convertView, ViewGroup parent) {
+    City city = getItem(position);
+    View view;
+    <span class="keyword">if</span> (convertView == <span class="keyword">null</span>) {
+        view = LayoutInflater.from(getContext()).inflate(resourceId, <span class="keyword">null</span>);
+    } <span class="keyword">else</span> {
+        view = convertView;
+
+    }
+    TextView cityname = (TextView) view.findViewById(R.id.city_name);
+    cityname.setText(city.getName());
+    <span class="keyword">return</span> view;
+ }
+}  
+</code></pre><p>  ###CityList_Activity</p>
+<pre><code><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CityList_Activity</span> <span class="keyword">extends</span> <span class="title">Activity</span> </span>{
+
+<span class="keyword">private</span> List&lt;City&gt; cityList = <span class="keyword">new</span> ArrayList&lt;City&gt;();
+
+<span class="annotation">@Override</span>
+<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>{
+    <span class="keyword">super</span>.onCreate(savedInstanceState);
+    requestWindowFeature(Window.FEATURE_NO_TITLE);
+    setContentView(R.layout.city_listlayout);
+    initCities();
+    CityListAdapter adapter = <span class="keyword">new</span> CityListAdapter(CityList_Activity.<span class="keyword">this</span>,
+            R.layout.city_item, cityList);
+    <span class="keyword">final</span> IndexableListView listView = (IndexableListView) findViewById((R.id.city_list));
+    listView.setAdapter(adapter);
+    listView.setFastScrollEnabled(<span class="keyword">true</span>);
+
+
+<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initCities</span><span class="params">()</span> </span>{
+    Resources res = getResources();
+    String[] cities = res.getStringArray(R.array.city_description_list);
+
+    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; cities.length; j++) {
+        City city = <span class="keyword">new</span> City(cities[j]);
+        cityList.add(city);
+    }
+  }
+  <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">City</span> </span>{
+    <span class="keyword">private</span> String name;
+
+    <span class="function"><span class="keyword">public</span> <span class="title">City</span><span class="params">(String name)</span></span>{
+    <span class="keyword">this</span>.name=name;
+    }
+    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span></span>{
+    <span class="keyword">return</span> name;
+  }
+ }
+}
+</code></pre>
+    </div>
+    <footer>
+        
+        
+		<div class="bdsharebuttonbox">
+	<a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+	<a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+	<a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a>
+	<a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a>
+	<a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+	<a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+	<a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+	<a href="#" class="bds_more" data-cmd="more"></a>
+	<a href="#" class="bds_count" data-cmd="count"></a>
+</div>
+<script>
+window._bd_share_config=
+{
+	"common":{
+		"bdSnsKey":{},
+		"bdText":"",
+		"bdMini":"2",
+		"bdMiniList":false,
+		"bdPic":"",
+		"bdStyle":"0",
+		"bdSize":"24"
+	},
+	"share":{},
+	"image":{
+		"viewList":["qzone","tsina","tqq","renren","weixin","fbook","twi"],
+		"viewText":"分享到：",
+		"viewSize":"24"
+	},
+	"selectShare":{
+		"bdContainerClass":null,
+		"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin","fbook","twi"]
+	}
+};
+with(document)0[
+	(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)
+];
+</script>    
+        <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+ <nav id="pagination" >
+    
+    
+    <a href="/2015/10/01/first-blood/" class="alignright next" title="first blood">first blood</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+
+
+	
+	<section id="comment">
+		<!-- 多说评论框 start -->
+		<div class="ds-thread" data-thread-key="2015/10/03/index/" data-title="实现ListView A~Z快速索引城市" data-url="http://yoursite.com/2015/10/03/index/"></div>
+		<!-- 多说评论框 end -->
+		<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+		<script type="text/javascript">
+		var duoshuoQuery = {short_name:"qjpblog"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+		<!-- 多说公共JS代码 end -->
+	</section>
+	
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:yoursite.com">
+  </form>
+</div>
+
+  
+
+  
+
+  <iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=1&ptype=1&speed=0&skin=1&isTitle=1&noborder=1&isWeibo=1&isFans=0&uid=2883283800&verifier=4496999f&dpc=1"></iframe>
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://opiece.me" title="Chillax's Blog" target="_blank">Chillax</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer"><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hi,I&#39;m the designer of this theme. <br/>
+			You can download this theme on my github.</p>
+	</section>
+	 
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/2883283800" target="_blank" title="weibo"></a>
+		
+		
+		<a href="https://twitter.com/wysdx" target="_blank" title="twitter"></a>
+		
+		
+		<a href="https://github.com/myJPQ" target="_blank" title="github"></a>
+		
+		
+		
+		
+		<a href="mailto:1051095242@qq.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/huangjunhui/concise" target="_blank" title="Concise">Concise</a> © 2015 
+		
+		<a href="http://yoursite.com/about" target="_blank" title="仇剑鹏">仇剑鹏</a>
+		
+		</p>
+</div>
+</footer>
+  <script src="//libs.baidu.com/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/counter.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+<div id="totop" style="position:fixed;bottom:100px;right:10px;cursor: pointer;">
+<a title="返回顶部"><img src="/imgs/scrollup.png"/></a>
+</div>
+<script src="/js/totop.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</body>
+</html>
+
+
