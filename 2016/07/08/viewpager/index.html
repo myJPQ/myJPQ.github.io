@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="http://tajs.qq.com/stats?sId=44218032" charset="UTF-8"></script>
+  <script>
+	var _hmt = _hmt || [];
+	(function() {
+	  var hm = document.createElement("script");
+	  hm.src = "//hm.baidu.com/hm.js?ecd7d602696d6892e8421e78a6f28a9e";
+	  var s = document.getElementsByTagName("script")[0]; 
+	  s.parentNode.insertBefore(hm, s);
+	})();
+	</script>
+  
+  <title>android用Viewpager 实现左右滑动页面 | Q_JP大鹏</title>
+  <meta name="author" content="仇剑鹏">
+  
+  <meta name="description" content="大鹏的blog｜android｜java">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="android用Viewpager 实现左右滑动页面"/>
+  <meta property="og:site_name" content="Q_JP大鹏"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/imgs/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="Q_JP大鹏" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="//libs.baidu.com/jquery/1.8.0/jquery.min.js"></script>
+</head>
+
+
+<body>
+  <header><div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/imgs/logo.png" alt="Q_JP大鹏" title="Q_JP大鹏"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name">Q_JP大鹏</h1>
+				<h2 class="blog-motto">只想安安静静的敲代码</h2>
+			</div>
+			<nav class="animated">
+				<ul>
+					
+						<li><a href="/">Home</a></li>
+					
+						<li><a href="/archives">Archives</a></li>
+					
+						<li><a href="/about">About</a></li>
+					
+					<li> <a href="/atom.xml">RSS</a> </li>
+				</ul>
+			</nav>			
+</div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header class="article-info clearfix">
+  <h1 itemprop="name">
+	android用Viewpager 实现左右滑动页面
+  </h1>
+  <p class="article-author">By
+    
+      <a href="http://yoursite.com" title="仇剑鹏">仇剑鹏</a>
+    </p>
+  <p class="article-time">
+    <time datetime="2016-07-08T05:45:29.000Z" itemprop="datePublished">2016-07-08</time>
+    更新日期:<time datetime="2016-07-08T05:45:14.000Z" itemprop="dateModified">2016-07-08</time>
+    
+  </p>
+</header>
+    <div class="entry">
+		
+        <p>实现步骤：</p>
+<ul>
+<li><p>1.在布局文件中定义viewpager组件</p>
+</li>
+<li><p>2.实现适配器viewpager.setAdapter</p>
+</li>
+</ul>
+<hr>
+<p>代码如下：<br>-</p>
+<p>###viewpager.xml<br>    <relativelayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" tools:context=".MainActivity"></relativelayout></p>
+<pre><code>&lt;TextView
+    android:layout_width=<span class="string">"match_parent"</span>
+    android:layout_height=<span class="string">"1dp"</span>
+    android:layout_alignBottom=<span class="string">"@+id/my"</span>
+    android:<span class="attribute">background</span>=<span class="string">"#cccccc"</span>
+    android:id=<span class="string">"@+id/line"</span>/&gt;
+
+&lt;android<span class="class">.support</span><span class="class">.v4</span><span class="class">.view</span><span class="class">.ViewPager</span>
+    android:id=<span class="string">"@+id/viewpager"</span>
+    android:layout_width=<span class="string">"wrap_content"</span>
+    android:layout_height=<span class="string">"wrap_content"</span>
+    android:layout_below=<span class="string">"@+id/line"</span>&gt;
+
+    &lt;android<span class="class">.support</span><span class="class">.v4</span><span class="class">.view</span><span class="class">.PagerTabStrip</span>
+        android:id=<span class="string">"@+id/tabstrip"</span>
+        android:layout_width=<span class="string">"wrap_content"</span>
+        android:layout_height=<span class="string">"0dip"</span>
+        android:gravity=<span class="string">"center"</span> /&gt;
+&lt;/android<span class="class">.support</span><span class="class">.v4</span><span class="class">.view</span><span class="class">.ViewPager</span>&gt;
+&lt;/RelativeLayout&gt;
+</code></pre><p>###MainActivity.java<br>    public class MainActivity extends Activity {</p>
+<pre><code>ViewPager pager = <span class="keyword">null</span>;
+PagerTabStrip tabStrip = <span class="keyword">null</span>;
+ArrayList&lt;View&gt; viewContainter = <span class="keyword">new</span> ArrayList&lt;View&gt;();
+ArrayList&lt;String&gt; titleContainer = <span class="keyword">new</span> ArrayList&lt;String&gt;();
+<span class="keyword">public</span> String TAG = <span class="string">"tag"</span>;
+
+<span class="annotation">@SuppressLint</span>(<span class="string">"ResourceAsColor"</span>)
+<span class="annotation">@Override</span>
+<span class="keyword">protected</span> <span class="function"><span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>{
+    <span class="keyword">super</span>.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+
+    pager = (ViewPager) <span class="keyword">this</span>.findViewById(R.id.viewpager);
+    tabStrip = (PagerTabStrip) <span class="keyword">this</span>.findViewById(R.id.tabstrip);
+    <span class="comment">//取消tab下面的长横线</span>
+    tabStrip.setDrawFullUnderline(<span class="keyword">false</span>);
+    <span class="comment">//设置tab的背景色</span>
+    tabStrip.setBackgroundColor(<span class="keyword">this</span>.getResources().getColor(R.color.bg));
+    <span class="comment">//设置当前tab页签的下划线颜色</span>
+    tabStrip.setTabIndicatorColor(<span class="keyword">this</span>.getResources().getColor(R.color.red));
+    tabStrip.setTextSpacing(<span class="number">200</span>);
+
+    View view1 = LayoutInflater.from(<span class="keyword">this</span>).inflate(R.layout.tab1, <span class="keyword">null</span>);
+    View view2 = LayoutInflater.from(<span class="keyword">this</span>).inflate(R.layout.tab2, <span class="keyword">null</span>);
+    View view3 = LayoutInflater.from(<span class="keyword">this</span>).inflate(R.layout.tab3, <span class="keyword">null</span>);
+    View view4 = LayoutInflater.from(<span class="keyword">this</span>).inflate(R.layout.tab4, <span class="keyword">null</span>);
+  <span class="comment">//viewpager开始添加view</span>
+    viewContainter.add(view1);
+    viewContainter.add(view2);
+    viewContainter.add(view3);
+    viewContainter.add(view4);
+  <span class="comment">//页签项</span>
+    titleContainer.add(<span class="string">"网易新闻"</span>);
+    titleContainer.add(<span class="string">"网易体育"</span>);
+    titleContainer.add(<span class="string">"网易财经"</span>);
+    titleContainer.add(<span class="string">"网易女人"</span>);
+
+    pager.setAdapter(<span class="keyword">new</span> PagerAdapter() {
+
+        <span class="comment">//viewpager中的组件数量</span>
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">getCount</span><span class="params">()</span> </span>{
+            <span class="function"><span class="keyword">return</span> viewContainter.<span class="title">size</span><span class="params">()</span></span>;
+        }
+      <span class="comment">//滑动切换的时候销毁当前的组件</span>
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">destroyItem</span><span class="params">(ViewGroup container, <span class="keyword">int</span> position,
+                Object object)</span> </span>{
+            ((ViewPager) container).removeView(viewContainter.get(position));
+        }
+      <span class="comment">//每次滑动的时候生成的组件</span>
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function">Object <span class="title">instantiateItem</span><span class="params">(ViewGroup container, <span class="keyword">int</span> position)</span> </span>{
+            ((ViewPager) container).addView(viewContainter.get(position));
+            <span class="function"><span class="keyword">return</span> viewContainter.<span class="title">get</span><span class="params">(position)</span></span>;
+        }
+
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function"><span class="keyword">boolean</span> <span class="title">isViewFromObject</span><span class="params">(View arg0, Object arg1)</span> </span>{
+            <span class="keyword">return</span> arg0 == arg1;
+        }
+
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function"><span class="keyword">int</span> <span class="title">getItemPosition</span><span class="params">(Object object)</span> </span>{
+            <span class="function"><span class="keyword">return</span> <span class="keyword">super</span>.<span class="title">getItemPosition</span><span class="params">(object)</span></span>;
+        }
+       <span class="comment">//加载标题</span>
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function">CharSequence <span class="title">getPageTitle</span><span class="params">(<span class="keyword">int</span> position)</span> </span>{
+            <span class="function"><span class="keyword">return</span> titleContainer.<span class="title">get</span><span class="params">(position)</span></span>;
+        }
+    });
+
+    pager.setOnPageChangeListener(<span class="keyword">new</span> OnPageChangeListener() {
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onPageScrollStateChanged</span><span class="params">(<span class="keyword">int</span> arg0)</span> </span>{
+            Log.d(TAG, <span class="string">"--------changed:"</span> + arg0);
+        }
+
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onPageScrolled</span><span class="params">(<span class="keyword">int</span> arg0, <span class="keyword">float</span> arg1, <span class="keyword">int</span> arg2)</span> </span>{
+            Log.d(TAG, <span class="string">"-------scrolled arg0:"</span> + arg0);
+            Log.d(TAG, <span class="string">"-------scrolled arg1:"</span> + arg1);
+            Log.d(TAG, <span class="string">"-------scrolled arg2:"</span> + arg2);
+        }
+
+        <span class="annotation">@Override</span>
+        <span class="keyword">public</span> <span class="function"><span class="keyword">void</span> <span class="title">onPageSelected</span><span class="params">(<span class="keyword">int</span> arg0)</span> </span>{
+            Log.d(TAG, <span class="string">"------selected:"</span> + arg0);
+        }
+    });
+
+}
+
+} 
+</code></pre>
+    </div>
+    <footer>
+        
+        
+		<div class="bdsharebuttonbox">
+	<a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a>
+	<a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+	<a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a>
+	<a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a>
+	<a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a>
+	<a href="#" class="bds_fbook" data-cmd="fbook" title="分享到Facebook"></a>
+	<a href="#" class="bds_twi" data-cmd="twi" title="分享到Twitter"></a>
+	<a href="#" class="bds_more" data-cmd="more"></a>
+	<a href="#" class="bds_count" data-cmd="count"></a>
+</div>
+<script>
+window._bd_share_config=
+{
+	"common":{
+		"bdSnsKey":{},
+		"bdText":"",
+		"bdMini":"2",
+		"bdMiniList":false,
+		"bdPic":"",
+		"bdStyle":"0",
+		"bdSize":"24"
+	},
+	"share":{},
+	"image":{
+		"viewList":["qzone","tsina","tqq","renren","weixin","fbook","twi"],
+		"viewText":"分享到：",
+		"viewSize":"24"
+	},
+	"selectShare":{
+		"bdContainerClass":null,
+		"bdSelectMiniList":["qzone","tsina","tqq","renren","weixin","fbook","twi"]
+	}
+};
+with(document)0[
+	(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)
+];
+</script>    
+        <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+ <nav id="pagination" >
+    
+    
+    <a href="/2015/10/03/index/" class="alignright next" title="android实现ListView A~Z快速索引城市">android实现ListView A~Z快速索引城市</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+
+
+	
+	<section id="comment">
+		<!-- 多说评论框 start -->
+		<div class="ds-thread" data-thread-key="2016/07/08/viewpager/" data-title="android用Viewpager 实现左右滑动页面" data-url="http://yoursite.com/2016/07/08/viewpager/"></div>
+		<!-- 多说评论框 end -->
+		<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+		<script type="text/javascript">
+		var duoshuoQuery = {short_name:"qjpblog"};
+		(function() {
+			var ds = document.createElement('script');
+			ds.type = 'text/javascript';ds.async = true;
+			ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+			ds.charset = 'UTF-8';
+			(document.getElementsByTagName('head')[0] 
+			 || document.getElementsByTagName('body')[0]).appendChild(ds);
+		})();
+		</script>
+		<!-- 多说公共JS代码 end -->
+	</section>
+	
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:yoursite.com">
+  </form>
+</div>
+
+  
+
+  
+
+  <iframe width="100%" height="550" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=550&fansRow=1&ptype=1&speed=0&skin=1&isTitle=1&noborder=1&isWeibo=1&isFans=0&uid=2883283800&verifier=4496999f&dpc=1"></iframe>
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://opiece.me" title="Chillax's Blog" target="_blank">Chillax</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer"><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> Hi,I&#39;m the designer of this theme. <br/>
+			You can download this theme on my github.</p>
+	</section>
+	 
+	<div class="social-font clearfix">
+		
+		<a href="http://weibo.com/2883283800" target="_blank" title="weibo"></a>
+		
+		
+		<a href="https://twitter.com/wysdx" target="_blank" title="twitter"></a>
+		
+		
+		<a href="https://github.com/myJPQ" target="_blank" title="github"></a>
+		
+		
+		
+		
+		<a href="mailto:1051095242@qq.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+		<p class="copyright">Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/huangjunhui/concise" target="_blank" title="Concise">Concise</a> © 2016 
+		
+		<a href="http://yoursite.com/about" target="_blank" title="仇剑鹏">仇剑鹏</a>
+		
+		</p>
+</div>
+</footer>
+  <script src="//libs.baidu.com/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/counter.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+<div id="totop" style="position:fixed;bottom:100px;right:10px;cursor: pointer;">
+<a title="返回顶部"><img src="/imgs/scrollup.png"/></a>
+</div>
+<script src="/js/totop.js"></script>
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</body>
+</html>
+
+
